@@ -25,7 +25,13 @@
 #include <tuple>
 #include <string>
 #include <typeinfo>
+#ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <dbghelp.h>
+#else
 #include <cxxabi.h>
+#endif
 
 namespace sigmf {
 
@@ -126,8 +132,15 @@ namespace sigmf {
                 size_t size_of_demangled_name = 1024;
                 char *demangled_name = static_cast<char *>(malloc(size_of_demangled_name));
                 int status;
+#ifndef _MSC_VER
                 demangled_name = abi::__cxa_demangle(mangled_name.c_str(), demangled_name, &size_of_demangled_name,
                                                      &status);
+#else
+                UnDecorateSymbolName(mangled_name.c_str(), demangled_name, size_of_demangled_name, UNDNAME_COMPLETE);
+                if (!strncmp(demangled_name, "struct ", 7)) {
+                    memmove(&demangled_name[0], &demangled_name[7], strlen(&demangled_name[7]) + 1);
+                }
+#endif
                 auto demangled_string = std::string(demangled_name);
                 free(static_cast<void *>(demangled_name));
                 auto namespace_end = demangled_string.find("::");
@@ -178,7 +191,7 @@ namespace sigmf {
              * @param j
              */
             static void from_json(Tuple &tp, const json j) {
-                typename std::tuple_element<Index, sigmftypes>::type::TableType *ttype;
+                typename std::tuple_element<Index, sigmftypes>::type::TableType *ttype=nullptr;
                 auto &flatbuffers_type = std::get<Index>(tp);
                 auto reflection_table = ttype->MiniReflectTypeTable();
                 std::string namespace_part = get_namespace(ttype);

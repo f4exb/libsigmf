@@ -26,6 +26,9 @@ set(LIBSIGMF_CMAKE_CONFIG_DIR          "${CMAKE_CURRENT_BINARY_DIR}")
 set(LIBSIGMF_CMAKE_PROJECT_CONFIG_FILE "${LIBSIGMF_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Config.cmake")
 set(LIBSIGMF_CMAKE_PROJECT_TARGETS_FILE "${LIBSIGMF_CMAKE_CONFIG_DIR}/${PROJECT_NAME}Targets.cmake")
 
+# With MSVC, the string ABI is incompatible between debug and release, so we need separate builds
+set(CMAKE_DEBUG_POSTFIX d)
+
 ########################################################################
 # Dependency management
 #
@@ -126,6 +129,8 @@ set(LIBSIGMF_GEN_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/sigmf_protocols")
 ########################################################################
 # Our interface target that downstream have to use
 ########################################################################
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 add_library(libsigmf
   SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/flatbuffers_json_visitor.cpp
