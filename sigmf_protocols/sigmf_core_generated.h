@@ -386,6 +386,7 @@ struct AnnotationT : public flatbuffers::NativeTable {
   uint64_t sample_start;
   uint64_t sample_count;
   std::string description;
+  std::string label;
   std::string generator;
   std::string comment;
   AnnotationT()
@@ -407,8 +408,9 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_SAMPLE_START = 8,
     VT_SAMPLE_COUNT = 10,
     VT_DESCRIPTION = 12,
-    VT_GENERATOR = 14,
-    VT_COMMENT = 16
+    VT_LABEL = 14,
+    VT_GENERATOR = 16,
+    VT_COMMENT = 18
   };
   double freq_lower_edge() const {
     return GetField<double>(VT_FREQ_LOWER_EDGE, 0.0);
@@ -425,6 +427,9 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *description() const {
     return GetPointer<const flatbuffers::String *>(VT_DESCRIPTION);
   }
+  const flatbuffers::String *label() const {
+    return GetPointer<const flatbuffers::String *>(VT_LABEL);
+  }
   const flatbuffers::String *generator() const {
     return GetPointer<const flatbuffers::String *>(VT_GENERATOR);
   }
@@ -439,6 +444,8 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<uint64_t>(verifier, VT_SAMPLE_COUNT) &&
            VerifyOffset(verifier, VT_DESCRIPTION) &&
            verifier.VerifyString(description()) &&
+           VerifyOffset(verifier, VT_LABEL) &&
+           verifier.VerifyString(label()) &&
            VerifyOffset(verifier, VT_GENERATOR) &&
            verifier.VerifyString(generator()) &&
            VerifyOffset(verifier, VT_COMMENT) &&
@@ -468,6 +475,9 @@ struct AnnotationBuilder {
   void add_description(flatbuffers::Offset<flatbuffers::String> description) {
     fbb_.AddOffset(Annotation::VT_DESCRIPTION, description);
   }
+  void add_label(flatbuffers::Offset<flatbuffers::String> label) {
+    fbb_.AddOffset(Annotation::VT_LABEL, label);
+  }
   void add_generator(flatbuffers::Offset<flatbuffers::String> generator) {
     fbb_.AddOffset(Annotation::VT_GENERATOR, generator);
   }
@@ -493,6 +503,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(
     uint64_t sample_start = 0,
     uint64_t sample_count = 0,
     flatbuffers::Offset<flatbuffers::String> description = 0,
+    flatbuffers::Offset<flatbuffers::String> label = 0,
     flatbuffers::Offset<flatbuffers::String> generator = 0,
     flatbuffers::Offset<flatbuffers::String> comment = 0) {
   AnnotationBuilder builder_(_fbb);
@@ -502,6 +513,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(
   builder_.add_freq_lower_edge(freq_lower_edge);
   builder_.add_comment(comment);
   builder_.add_generator(generator);
+  builder_.add_label(label);
   builder_.add_description(description);
   return builder_.Finish();
 }
@@ -513,9 +525,11 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
     uint64_t sample_start = 0,
     uint64_t sample_count = 0,
     const char *description = nullptr,
+    const char *label = nullptr,
     const char *generator = nullptr,
     const char *comment = nullptr) {
   auto description__ = description ? _fbb.CreateString(description) : 0;
+  auto label__ = label ? _fbb.CreateString(label) : 0;
   auto generator__ = generator ? _fbb.CreateString(generator) : 0;
   auto comment__ = comment ? _fbb.CreateString(comment) : 0;
   return core::CreateAnnotation(
@@ -525,6 +539,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotationDirect(
       sample_start,
       sample_count,
       description__,
+      label__,
       generator__,
       comment__);
 }
@@ -723,6 +738,7 @@ inline void Annotation::UnPackTo(AnnotationT *_o, const flatbuffers::resolver_fu
   { auto _e = sample_start(); _o->sample_start = _e; };
   { auto _e = sample_count(); _o->sample_count = _e; };
   { auto _e = description(); if (_e) _o->description = _e->str(); };
+  { auto _e = label(); if (_e) _o->label = _e->str(); };
   { auto _e = generator(); if (_e) _o->generator = _e->str(); };
   { auto _e = comment(); if (_e) _o->comment = _e->str(); };
 }
@@ -740,6 +756,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(flatbuffers::FlatBufferB
   auto _sample_start = _o->sample_start;
   auto _sample_count = _o->sample_count;
   auto _description = _o->description.empty() ? 0 : _fbb.CreateString(_o->description);
+  auto _label = _o->label.empty() ? 0 : _fbb.CreateString(_o->label);
   auto _generator = _o->generator.empty() ? 0 : _fbb.CreateString(_o->generator);
   auto _comment = _o->comment.empty() ? 0 : _fbb.CreateString(_o->comment);
   return core::CreateAnnotation(
@@ -749,6 +766,7 @@ inline flatbuffers::Offset<Annotation> CreateAnnotation(flatbuffers::FlatBufferB
       _sample_start,
       _sample_count,
       _description,
+      _label,
       _generator,
       _comment);
 }
@@ -849,6 +867,7 @@ inline const flatbuffers::TypeTable *AnnotationTypeTable() {
     { flatbuffers::ET_ULONG, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 },
+    { flatbuffers::ET_STRING, 0, -1 },
     { flatbuffers::ET_STRING, 0, -1 }
   };
   static const char * const names[] = {
@@ -857,11 +876,12 @@ inline const flatbuffers::TypeTable *AnnotationTypeTable() {
     "sample_start",
     "sample_count",
     "description",
+    "label",
     "generator",
     "comment"
   };
   static const flatbuffers::TypeTable tt = {
-    flatbuffers::ST_TABLE, 7, type_codes, nullptr, nullptr, names
+    flatbuffers::ST_TABLE, 8, type_codes, nullptr, nullptr, names
   };
   return &tt;
 }
