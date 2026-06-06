@@ -124,7 +124,7 @@ generate_sigmf_header(generated_testing_ns
 )
 
 # We also carry around pre-generated headers so downstream doesn't need to build flatc
-set(LIBSIGMF_GEN_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/sigmf_protocols")
+set(LIBSIGMF_PREGEN_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/sigmf_protocols")
 
 ########################################################################
 # Our interface target that downstream have to use
@@ -141,7 +141,7 @@ target_include_directories(libsigmf
   $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
   $<INSTALL_INTERFACE:include/sigmf/fbs>
-  $<BUILD_INTERFACE:${LIBSIGMF_GEN_HEADERS}>
+  $<BUILD_INTERFACE:${LIBSIGMF_PREGEN_HEADERS}>
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/include
   )
@@ -204,11 +204,15 @@ configure_file(
 # Install SigMF headers
 ########################################################################
 install(  # install flatbuf proto defs
-  DIRECTORY ${LIBSIGMF_GEN_HEADERS}/
+  DIRECTORY ${LIBSIGMF_PREGEN_HEADERS}/
   DESTINATION include/libsigmf/fbs
   FILES_MATCHING PATTERN "*.fbs")
-install(  # install generated headers
-  DIRECTORY ${LIBSIGMF_GEN_HEADERS}/
+install(  # install pregenerated headers
+  DIRECTORY ${LIBSIGMF_PREGEN_HEADERS}/
+  DESTINATION include/libsigmf
+  FILES_MATCHING PATTERN "*.h")
+install(  # if headers were built, replace pregenerated headers with those
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
   DESTINATION include/libsigmf
   FILES_MATCHING PATTERN "*.h")
 install(  # install original headers
